@@ -1,6 +1,7 @@
 var dbService = require("../services/dbService.js");
 var tokenService = require("../services/tokenService.js");
 var fbService = require("../services/requestFbService.js");
+var self = require('./relationRequest.js');
 
 function likeDequy(id,url){
     return new Promise(function(resolve,reject){
@@ -157,12 +158,22 @@ function commentDequy(id,url,level){
                     var nodeData ={created_time:item.created_time,message:item.message,id:item.id};
                     var userData = item.from;
                     
-                    dbService.createNode('Comment',nodeData).then(
+                    dbService.createNode(nodeData,'comment').then(
                         (succ)=>{
-                                dbService.createNode('User',userData).then((succ)=>{
+                                dbService.createNode(userData).then((succ)=>{
                                     dbService.createCommentRelationship(userData.id,nodeData.id,id).then(
                                             (succ)=>{
-                                                resolve(succ);
+                                                if(level==1){
+                                                        self.getComments(nodeData.id,2).then((succ)=>{
+                                                            self.getLikes(nodeData.id).then((succ)=>{
+                                                                console.log('Done get data in level 2 ',nodeData.id);
+                                                            },(err)=>{console.log(err);});
+                                                        },(err)=>{console.log(err);});
+                                                        resolve(succ);
+                                                    }
+                                                    else{
+                                                        resolve(succ);
+                                                    }
                                             },(err)=>{reject(err);}
                                         );
                                 },
@@ -173,7 +184,17 @@ function commentDequy(id,url,level){
                                     if(err.indexOf('already exists with label') > -1) {
                                         dbService.createCommentRelationship(userData.id,nodeData.id,id).then(
                                             (succ)=>{
-                                                resolve(succ);
+                                                if(level==1){
+                                                        self.getComments(nodeData.id,2).then((succ)=>{
+                                                            self.getLikes(nodeData.id).then((succ)=>{
+                                                                console.log('Done get data in level 2 ',nodeData.id);
+                                                            },(err)=>{console.log(err);});
+                                                        },(err)=>{console.log(err);});
+                                                        resolve(succ);
+                                                    }
+                                                    else{
+                                                        resolve(succ);
+                                                    }
                                             },(err)=>{reject(err);}
                                         );
                                     }
@@ -189,19 +210,41 @@ function commentDequy(id,url,level){
                             console.log('here 1');
                             if(err.indexOf('already exists with label') > -1) {
                                 console.log('here 2');    
-                                dbService.createNode('User',userData).then((succ)=>{
+                                dbService.createNode(userData).then((succ)=>{
                                     dbService.createCommentRelationship(userData.id,nodeData.id,id).then(
                                             (succ)=>{
-                                                resolve(succ);
+                                                if(level==1){
+                                                        self.getComments(nodeData.id,2).then((succ)=>{
+                                                            self.getLikes(nodeData.id).then((succ)=>{
+                                                                console.log('Done get data in level 2 ',nodeData.id);
+                                                            },(err)=>{console.log(err);});
+                                                        },(err)=>{console.log(err);});
+                                                        resolve(succ);
+                                                    }
+                                                    else{
+                                                        resolve(succ);
+                                                    }
                                             },(err)=>{reject(err);}
                                         );
                                 },
                                 (err)=>{
+                                    console.log('here 3');
                                     err = JSON.stringify(err.message);
                                     if(err.indexOf('already exists with label') > -1) {
+                                        console.log('here 4');
                                         dbService.createCommentRelationship(userData.id,nodeData.id,id).then(
                                                 (succ)=>{
-                                                    resolve(succ);
+                                                    if(level==1){
+                                                        self.getComments(nodeData.id,2).then((succ)=>{
+                                                            self.getLikes(nodeData.id).then((succ)=>{
+                                                                console.log('Done get data in level 2 ',nodeData.id);
+                                                            },(err)=>{console.log(err);});
+                                                        },(err)=>{console.log(err);});
+                                                        resolve(succ);
+                                                    }
+                                                    else{
+                                                        resolve(succ);
+                                                    }
                                                 },(err)=>{reject(err);}
                                             );                                        
                                     }
@@ -211,8 +254,7 @@ function commentDequy(id,url,level){
                                 }
                                 );
                             }
-                            else{
-                                console.log('here 3');    
+                            else{    
                                 reject(err);    
                             }
                         });
