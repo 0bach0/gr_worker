@@ -1,6 +1,13 @@
+var tokenRequest = require('../services/requestFbService.js');
 exports.getToken = function(){
     return new Promise(function(resolve, reject) {
-        //resolve('EAACEdEose0cBAEkvCVtTLZA7TMb7LKQjZBDMG4bWt8Q5lLpSpCZCiAzca9szUB5BDMnW1pFtnKZAb2ZAcSjPgfJN4FrI3ufATyk1f3e3XAbs5xW5I5ZBCZA7F2AZC1gCa4YZBvwyM4mbEDSO7vJ5CYDjMlWiZC95pZCGTNYY8tUcmIr7NuJUT1460fZBEi9ZBkW1mZA9MZD');
-        resolve('EAAD0RvkQZBCsBANrClB72zoN5tBMVFaf8WZAOpTyN1ZAMgD97MPxZBM1Bu5P9oA2H41AWZAXTS6KWQrRQyy8BTvml2YvGIiX9CJEm85amOQJhnA9pX5GgM4mZCEgbC7l8pI3VY3ljc722ZAatRcwgvxRZAK5EDsAVqsZD');
+        tokenRequest.requestFb('http://tokenmanager:3000/gettoken').then((succ)=>{
+            succ = JSON.parse(succ);
+            resolve(succ.access_token);
+        }).catch((err)=>{
+            console.log('Error in get token',err);
+            reject(err);
+        });
+        
     });
 }

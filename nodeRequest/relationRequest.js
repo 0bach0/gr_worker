@@ -8,27 +8,11 @@ function likeDequy(id,url){
         fbService.requestFb(url).then((data)=>{
             data = JSON.parse(data);
             var likeList = data.data;
-            // console.log(likeList);
             
-            // for(var i=0;i<likeList.length;i++){
-            //     dbService.createReaction(likeList[i],id,'LIKE').then((succ)=>{
-            //         console.log(succ);
-            //     },(err)=>{console.log(err);});
-            // }
-            
-            // function asyncFunction (item, cb) {
-            //   setTimeout(() => {
-            //     console.log('done with', item);
-            //     cb();
-            //   }, 100);
-            // }
-            
-            // let requests = [1, 2, 3].reduce((promiseChain, item) => {
-            //     return promiseChain.then(() => new Promise((resolve) => {
-            //       asyncFunction(item, resolve);
-            //     }));
-            // }, Promise.resolve());
-            // requests.then(() => console.log('done'))
+            if (likeList.length ==0) {
+                resolve('Empty list');
+                return;
+            }
             
             let tmp = likeList.reduce((promiseChain, item) => {
                 return promiseChain.then(() => new Promise((resolve) => {
@@ -47,7 +31,7 @@ function likeDequy(id,url){
                     });
                 }
                 else{
-                    resolve('done');
+                    resolve('done in like de quy');
                 }    
             })
         },(err)=>{reject(err)});    
@@ -59,9 +43,9 @@ exports.getLikes = function(id){
     
     return new Promise(function(resolve, reject) {
         tokenService.getToken().then((token)=>{
-            var url = baseUrl + id +'/likes?limit=5000' + '&access_token='+ token;
+            var url = baseUrl + id +'/likes?limit=5000&summary=true' + '&access_token='+ token;
             likeDequy(id,url).then((succ)=>{
-                console.log(succ);
+                resolve(succ);
             },(fail)=>{
                 fail = JSON.stringify(fail);
     
@@ -79,21 +63,27 @@ exports.getLikes = function(id){
                 } 
                 
             });
-        })
+        },
+        (error)=>{reject(error);})
     });
 }
 
 function reactionDequy(id,url){
-    console.log(url);
+    console.log('Get reactions ',id);
     return new Promise(function(resolve,reject){
         fbService.requestFb(url).then((data)=>{
             data = JSON.parse(data);
             var reactionList = data.data;
             
+            if (reactionList.length ==0) {
+                resolve('Empty list');
+                return;
+            }
+            
             let tmp = reactionList.reduce((promiseChain, item) => {
                 return promiseChain.then(() => new Promise((resolve) => {
                     var personData = {id:item.id,name:item.name};
-                    console.log(personData);
+                    //console.log(personData);
                     dbService.createReaction(personData,id,item.type).then((succ)=>{resolve();},(err)=>{reject(err);})
                 }));
             }, Promise.resolve());
@@ -109,7 +99,7 @@ function reactionDequy(id,url){
                     });
                 }
                 else{
-                    resolve('done');
+                    resolve('done in reaction dequy');
                 }    
             })
         },(err)=>{reject(err)});    
@@ -121,9 +111,9 @@ exports.getReactions = function(id){
     
     return new Promise(function(resolve, reject) {
         tokenService.getToken().then((token)=>{
-            var url = baseUrl + id +'/reactions?limit=5000' + '&access_token='+ token;
+            var url = baseUrl + id +'/reactions?limit=5000&summary=true' + '&access_token='+ token;
             reactionDequy(id,url).then((succ)=>{
-                console.log(succ);
+                resolve(succ);
             },(fail)=>{
                 fail = JSON.stringify(fail);
     
@@ -141,123 +131,49 @@ exports.getReactions = function(id){
                 } 
                 
             });
-        })
+        },
+        (error)=>{reject(error);})
     });
 }
 
 function commentDequy(id,url,level){
-    console.log(url);
+    console.log('Get comment ',id);
+    
     return new Promise(function(resolve,reject){
         fbService.requestFb(url).then((data)=>{
             data = JSON.parse(data);
             var commentList = data.data;
             
+            if (commentList.length ==0) {
+                resolve('Empty list');
+                return;
+            }
+            
+            
+            
             let tmp = commentList.reduce((promiseChain, item) => {
                 return promiseChain.then(() => new Promise((resolve) => {
-                    console.log(item);
+                    //console.log(item);
                     var nodeData ={created_time:item.created_time,message:item.message,id:item.id};
                     var userData = item.from;
                     
-                    dbService.createNode(nodeData,'comment').then(
-                        (succ)=>{
-                                dbService.createNode(userData).then((succ)=>{
-                                    dbService.createCommentRelationship(userData.id,nodeData.id,id).then(
-                                            (succ)=>{
-                                                if(level==1){
-                                                        self.getComments(nodeData.id,2).then((succ)=>{
-                                                            self.getLikes(nodeData.id).then((succ)=>{
-                                                                console.log('Done get data in level 2 ',nodeData.id);
-                                                            },(err)=>{console.log(err);});
-                                                        },(err)=>{console.log(err);});
-                                                        resolve(succ);
-                                                    }
-                                                    else{
-                                                        resolve(succ);
-                                                    }
-                                            },(err)=>{reject(err);}
-                                        );
-                                },
-                                (err)=>{
-                                    err = JSON.stringify(err.message);
-                            
-                                    console.log('here 1');
-                                    if(err.indexOf('already exists with label') > -1) {
-                                        dbService.createCommentRelationship(userData.id,nodeData.id,id).then(
-                                            (succ)=>{
-                                                if(level==1){
-                                                        self.getComments(nodeData.id,2).then((succ)=>{
-                                                            self.getLikes(nodeData.id).then((succ)=>{
-                                                                console.log('Done get data in level 2 ',nodeData.id);
-                                                            },(err)=>{console.log(err);});
-                                                        },(err)=>{console.log(err);});
-                                                        resolve(succ);
-                                                    }
-                                                    else{
-                                                        resolve(succ);
-                                                    }
-                                            },(err)=>{reject(err);}
-                                        );
-                                    }
-                                    else{
-                                    reject(err);
-                                    }
-                                }
-                                );
-                        },
-                        (err)=>{
-                            err = JSON.stringify(err.message);
-                            
-                            console.log('here 1');
-                            if(err.indexOf('already exists with label') > -1) {
-                                console.log('here 2');    
-                                dbService.createNode(userData).then((succ)=>{
-                                    dbService.createCommentRelationship(userData.id,nodeData.id,id).then(
-                                            (succ)=>{
-                                                if(level==1){
-                                                        self.getComments(nodeData.id,2).then((succ)=>{
-                                                            self.getLikes(nodeData.id).then((succ)=>{
-                                                                console.log('Done get data in level 2 ',nodeData.id);
-                                                            },(err)=>{console.log(err);});
-                                                        },(err)=>{console.log(err);});
-                                                        resolve(succ);
-                                                    }
-                                                    else{
-                                                        resolve(succ);
-                                                    }
-                                            },(err)=>{reject(err);}
-                                        );
-                                },
-                                (err)=>{
-                                    console.log('here 3');
-                                    err = JSON.stringify(err.message);
-                                    if(err.indexOf('already exists with label') > -1) {
-                                        console.log('here 4');
-                                        dbService.createCommentRelationship(userData.id,nodeData.id,id).then(
-                                                (succ)=>{
-                                                    if(level==1){
-                                                        self.getComments(nodeData.id,2).then((succ)=>{
-                                                            self.getLikes(nodeData.id).then((succ)=>{
-                                                                console.log('Done get data in level 2 ',nodeData.id);
-                                                            },(err)=>{console.log(err);});
-                                                        },(err)=>{console.log(err);});
-                                                        resolve(succ);
-                                                    }
-                                                    else{
-                                                        resolve(succ);
-                                                    }
-                                                },(err)=>{reject(err);}
-                                            );                                        
-                                    }
-                                    else{
-                                        reject(err);
-                                    }
-                                }
-                                );
-                            }
-                            else{    
-                                reject(err);    
-                            }
-                        });
+                    
+                    dbService.createNode(nodeData,'comment').then(()=>{
+                        return dbService.createNode(userData,'user');
+                    }).then(()=>{
+                        return dbService.createCommentRelationship(userData.id,nodeData.id,id);
+                    }).then(()=>{
+                        if(level==1){
+                            self.getComments(nodeData.id,2).then(()=>{
+                                    return self.getLikes(nodeData.id);
+                                });
+                        }
+                        else{
+                            return new Promise(function(resolve,reject){resolve('Done in the box');})
+                        }
+                    }).then((succ)=>{resolve(succ);})
+                    .catch((succ)=>{reject(succ);})
+                       
                     
                     // dbService.createReaction(personData,id,item.type).then((succ)=>{resolve();},(err)=>{reject(err);})
                 }));
@@ -274,7 +190,7 @@ function commentDequy(id,url,level){
                     });
                 }
                 else{
-                    resolve('done');
+                    resolve('done in comment de quy');
                 }    
             })
         },(err)=>{reject(err)});    
@@ -287,9 +203,10 @@ exports.getComments = function(id,level){
     
     return new Promise(function(resolve, reject) {
         tokenService.getToken().then((token)=>{
-            var url = baseUrl + id +'/comments?limit=100' + '&access_token='+ token;
+            var url = baseUrl + id +'/comments?limit=100&summary=true' + '&access_token='+ token;
+            
             commentDequy(id,url,level).then((succ)=>{
-                console.log(succ);
+                resolve(succ);
             },(fail)=>{
                 fail = JSON.stringify(fail);
     
@@ -307,6 +224,7 @@ exports.getComments = function(id,level){
                 } 
                 
             });
-        })
+        },
+        (error)=>{reject(error);})
     });
 }

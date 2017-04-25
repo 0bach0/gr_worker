@@ -53,12 +53,14 @@ exports.createNode = function(id,type){
                 default:
                     // code
             }
+            
             var url = baseUrl + id + fieldRequest + '&access_token='+ token;
+            console.log(url);
             fbService.requestFb(url).then((data)=>{
                 data = JSON.parse(data);
                 dbService.createNode(data,succ).then(
                     (succ)=>{
-                        resolve(data);        
+                        resolve("Created node");        
                     },(err)=>{
                         reject(err);
                     }

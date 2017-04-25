@@ -34,7 +34,7 @@ function standardNode(data){
 
 exports.createNode = function(data,postType){
     return new Promise(function(resolve, reject) {
-        var label =['zNode'];
+        var label =['Node'];
         if(postType!=undefined){
             postType = postType[0].toUpperCase() + postType.slice(1);
             label.push(postType);
@@ -52,8 +52,8 @@ exports.createNode = function(data,postType){
                             if(node === true){
                                 resolve(nodeId);
                                 db.addLabelsToNode(nodeId, label, function (err, result) {
-                                    console.log('Add labels',err);
-                                    console.log('Add labels',result);
+                                    // console.log('Add labels',err);
+                                    // console.log('Add labels',result);
                                 });
                             } else {
                                 // node not found, hence not updated
@@ -78,11 +78,11 @@ exports.createNode = function(data,postType){
 exports.createReaction = function(data,toId,type){
     return new Promise(function(resolve, reject) {
         var userData = '{id:"'+ data.id+'",name:"'+ data.name+ '"}';
-        var query = 'MATCH (v:Node{id:"' + toId + '"}) MERGE (u:User:Node' + userData + ') CREATE UNIQUE (u) -[:REACTION{type:"'+type+'"}]->(v)';
+        var query = 'MATCH (v:Node{id:"' + toId + '"}) MERGE (u:Node' + userData + ') CREATE UNIQUE (u) -[:REACTION{type:"'+type+'"}]->(v)';
         
         db.cypherQuery(query, function(err, result){
             if(err) {reject(err); return;};
-            resolve('done');
+            resolve('done in create reaction');
         });
     });
 }
@@ -93,10 +93,23 @@ exports.createCommentRelationship= function(fromId,commentId,toId){
         
         var query = 'MERGE (u:Node{id:"'+ commentId  + '"}) MERGE (v:Node{id:"' + toId + '"})';
         query = query + 'MERGE (t:Node{id:"' +fromId + '"}) CREATE UNIQUE (t)-[:COMMENT_FROM]->(u)-[:COMMENT_TO]->(v)';
-        console.log(query);
+        //console.log(query);
         db.cypherQuery(query, function(err, result){
             if(err) {reject(err); return;};
-            resolve('done');
+            resolve('done in created comment relationship');
+        });
+    });
+}
+
+
+exports.createLink = function(fromId,toId,type){
+    return new Promise(function(resolve, reject) {
+        
+        var query = 'MATCH (v:Node{id:"' + toId + '"}) MERGE (u:Node{id:"' + fromId + '"}) CREATE UNIQUE (u) -[:'+ type +']->(v)';
+        
+        db.cypherQuery(query, function(err, result){
+            if(err) {reject(err); console.log(err); return;};
+            resolve('done in create reaction');
         });
     });
 }

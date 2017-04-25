@@ -1,13 +1,59 @@
-var baseUrl="https://graph.facebook.com/v2.8/";
-var nodeRequest = require('./nodeRequest/nodeRequest.js');
-var relationRequest = require('./nodeRequest/relationRequest.js');
-var dbService = require('./services/dbService.js');
+var crawlPosts = require('./jobProcess/createData.js');
 
-//relationRequest.getComments('1455693157795104',1).then((succ)=>{console.log('done here',succ);},(err)=>{console.log('error here',err);});
-//relationRequest.getReactions('1455693157795104').then((succ)=>{console.log('done here',succ);},(err)=>{console.log('error here',err);});
-nodeRequest.createNode('322844167911209').then((succ)=>{console.log(succ);},(err)=>{console.log(err);});
+// var kue = require('kue');
+// var jobs = kue.createQueue(
+//         {redis:{
+//             host: 'kue'
+//         }}
+//     ); 
+// jobs.process('updatedata', function (job, done){
+//     console.log(job.data);
+    
+//     switch (job.data.jobType) {
+//         case 'update_feed':
+//             var id = job.data.id;
+//             var time_limit = job.data.timeLimit;
+//             crawlPosts.crawlFeeds(id,time_limit,job).then((succ)=>{
+//                 done();
+//                 console.log(succ);
+//             },
+//                 (err)=>{
+//                     console.log('error here',err.status);
+//                     job.log('Error %s','av');
+//                     done('Error token');
+//                 });
+//             break;
+        
+//         default:
+//             // code
+//     }
+// });
 
-//331230823580420_1362327460470746 11k react, 700 comments
+//relationRequest.getComments('350006241681991_1735254759823792',1).then((succ)=>{console.log('done here',succ);},(err)=>{console.log('error here',err);});
+//relationRequest.getReactions('350006241681991_1735254759823792').then((succ)=>{console.log('done here');},(err)=>{console.log('error here',err);});
+//nodeRequest.createNode('952630044768087_1455693157795104').then((succ)=>{console.log(succ);},(err)=>{console.log(err);});
+ crawlPosts.crawlPosts('1470174553229556',1).then(
+    ()=>{return crawlPosts.crawlPosts('1471491439781390',1)}
+    ).then(
+    ()=>{return crawlPosts.crawlPosts('1494801207455252',1)}
+    ).then(
+    ()=>{return crawlPosts.crawlPosts('449542875117541',1)}
+    ).then(
+    ()=>{return crawlPosts.crawlPosts('443475742343686',1)}
+    ).then(
+    ()=>{return crawlPosts.crawlPosts('413368988854765',1)}
+    ).then(
+    ()=>{return crawlPosts.crawlPosts('357321631058548',1)}
+    ).then(
+    ()=>{return crawlPosts.crawlPosts('337787452991902',1)}
+    ).then(
+    ()=>{return crawlPosts.crawlPosts('1677637749155310',1)}
+    ).then(
+    ()=>{return crawlPosts.crawlPosts('160391583981664',1)}
+    ).then(
+    ()=>{return crawlPosts.crawlPosts('363207983792559',1)}
+    ).then(
+    ()=>{return crawlPosts.crawlPosts('375483755834215',1)}
+    ).catch((err)=>{console.log(err);})
 
 
-//dbService.demo();
