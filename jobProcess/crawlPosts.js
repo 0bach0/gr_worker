@@ -1,8 +1,8 @@
 var tokenService = require("../services/tokenService.js");
-var fbService = require("../services/requestFbService.js")
-var nodeRequest = require('../nodeRequest/nodeRequest.js');
-var relationRequest = require('../nodeRequest/relationRequest.js');
-var dbService = require('../services/dbService.js');
+var fbService = require("../services/requestFbService.js");
+var reportService = require("../services/reportService.js");
+var textClassify = require("../services/textClassify.js");
+
 
 function postDequy(id,url,limit){
     return new Promise(function(resolve,reject){
@@ -20,19 +20,41 @@ function postDequy(id,url,limit){
                 return promiseChain.then(() => new Promise((resolve) => {
                     if(continueRecuision){
                         var myDate = new Date(item.created_time);
-                        var postTime = myDate.getTime() / 1000;
+                        console.log(item.created_time);
+                        var postTime = Math.round(myDate.getTime() / 1000);
+                        
+                        limit = parseInt(limit);
+                        
                         if(postTime<limit){
                             continueRecuision = false;
                             resolve();
                         }
                         else{
-                            nodeRequest.createNode(item.id).then(function() {
-                                 return dbService.createLink(id,item.id,'POST');}
-                            ).then(function() {
-                                return relationRequest.getComments(item.id,1);}
-                            ).then(function() {
-                                return relationRequest.getReactions(item.id,1);}
-                            ).then((succ)=>{resolve(succ)}).catch((err)=>{reject(err);console.log('error in ',err);});
+                            var timeNow = new Date();
+                            var epochNow = Math.round(timeNow.getTime() / 1000);
+                            console.log(item.id);
+                            var dataElastic = {
+                                id:item.id,
+                                created_time: postTime,
+                                from_id: item.from.id,
+                                from_name: item.from.name,
+                                message:item.message
+                            }
+                            textClassify.classify(item.message).then((data)=>{
+                                dataElastic.type = data.type;
+                                dataElastic.type_text = data.classify;
+                                return reportService.checkExist(item.id);
+                                
+                            })
+                            .then((exist)=>{
+                                if(!exist){
+                                    reportService.requestElastic(dataElastic);    
+                                    resolve();
+                                }
+                                else{resolve();}
+                            })
+                            .catch((err)=>{console.log("Error in classify",err)});
+                            
                         }
                     }
                     else{
@@ -64,13 +86,12 @@ function postDequy(id,url,limit){
 
 exports.crawlPosts = function(id,limit){
     
-    var baseUrl="https://graph.facebook.com/v2.8/";
+    var baseUrl="https://graph.facebook.com/v2.9/";
     
     return new Promise(function(resolve, reject) {
         tokenService.getToken().then((token)=>{
-            var url = baseUrl + id +'/posts?limit=100&summary=true' + '&access_token='+ token;
-            nodeRequest.createNode(id).then((succ)=>{
-                console.log(succ);}).catch((err)=>{console.log(err);});
+            var url = baseUrl + id +'/posts?limit=100&fields=id,created_time,from,message';
+            url += '&access_token='+ token;
             postDequy(id,url,limit).then((succ)=>{
                 resolve(succ);
             },(fail)=>{
