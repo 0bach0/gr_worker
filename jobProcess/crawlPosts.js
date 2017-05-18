@@ -40,20 +40,43 @@ function postDequy(id,url,limit){
                                 from_name: item.from.name,
                                 message:item.message
                             }
-                            textClassify.classify(item.message).then((data)=>{
-                                dataElastic.type = data.type;
-                                dataElastic.type_text = data.classify;
-                                return reportService.checkExist(item.id);
-                                
-                            })
-                            .then((exist)=>{
+                            
+                            reportService.checkExist(item.id).then((exist)=>{
                                 if(!exist){
+                                    return textClassify.classify(item.message);
+                                }
+                                else{
+                                    continueRecuision = false;
+                                    resolve();}
+                            }).then( (data)=>{
+                                if(data === undefined){
+                                    continueRecuision = false;
+                                    resolve();
+                                }
+                                else{
+                                    console.log('Data here ',data);
+                                    dataElastic.type = data.type;
+                                    dataElastic.type_text = data.classify;
                                     reportService.requestElastic(dataElastic);    
                                     resolve();
                                 }
-                                else{resolve();}
                             })
-                            .catch((err)=>{console.log("Error in classify",err)});
+                            .catch((err)=>{console.log("Error in process",err)});
+                            
+                            // textClassify.classify(item.message).then((data)=>{
+                            //     dataElastic.type = data.type;
+                            //     dataElastic.type_text = data.classify;
+                            //     return reportService.checkExist(item.id);
+                                
+                            // })
+                            // .then((exist)=>{
+                            //     if(!exist){
+                            //         reportService.requestElastic(dataElastic);    
+                            //         resolve();
+                            //     }
+                            //     else{resolve();}
+                            // })
+                            // .catch((err)=>{console.log("Error in classify",err)});
                             
                         }
                     }
